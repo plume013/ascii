@@ -11,6 +11,8 @@ import {
   convertImageDataToAscii,
 } from "../lib/ascii";
 
+const DEFAULT_VIDEO_ASPECT = 4 / 3;
+
 export type CaptureStatus = "initial" | "pending" | "capturing" | "error";
 
 type UseAsciiCameraResult = {
@@ -33,6 +35,7 @@ export function useAsciiCamera(): UseAsciiCameraResult {
   const columnsRef = useRef(DEFAULT_COLUMNS);
   const lastFrameRef = useRef(0);
   const charAspectRef = useRef(DEFAULT_CHAR_ASPECT);
+  const videoAspectRef = useRef(DEFAULT_VIDEO_ASPECT);
   const initialRows = Math.max(
     20,
     Math.round((DEFAULT_COLUMNS / (4 / 3)) * DEFAULT_CHAR_ASPECT)
@@ -57,6 +60,19 @@ export function useAsciiCamera(): UseAsciiCameraResult {
     }
   }, []);
 
+  const updateRowEstimate = useCallback((cols: number) => {
+    const clampedCols = Math.max(MIN_COLUMNS, Math.min(cols, MAX_COLUMNS));
+    const aspect = videoAspectRef.current || DEFAULT_VIDEO_ASPECT;
+    const estimatedHeight = Math.max(
+      20,
+      Math.round((clampedCols / aspect) * charAspectRef.current)
+    );
+    if (rowsRef.current !== estimatedHeight) {
+      rowsRef.current = estimatedHeight;
+      setRowCount(estimatedHeight);
+    }
+  }, []);
+
   const renderAsciiFrame = useCallback(() => {
     const video = videoRef.current;
     const ctx = ctxRef.current;
@@ -77,6 +93,7 @@ export function useAsciiCamera(): UseAsciiCameraResult {
       video.videoWidth > 0 && video.videoHeight > 0
         ? video.videoWidth / video.videoHeight
         : 4 / 3;
+    videoAspectRef.current = aspectRatio;
     const targetHeight = Math.max(
       20,
       Math.round((targetWidth / aspectRatio) * charAspectRef.current)
@@ -193,18 +210,24 @@ export function useAsciiCamera(): UseAsciiCameraResult {
   const setColumns = (value: number) => {
     const clamped = Math.max(MIN_COLUMNS, Math.min(value, MAX_COLUMNS));
     setColumnsState(clamped);
+    columnsRef.current = clamped;
+    updateRowEstimate(clamped);
   };
 
-  const updateCharCellSize = useCallback((width: number, height: number) => {
-    if (width <= 0 || height <= 0) {
-      return;
-    }
-    const aspect = width / height;
-    if (!Number.isFinite(aspect)) {
-      return;
-    }
-    charAspectRef.current = aspect;
-  }, []);
+  const updateCharCellSize = useCallback(
+    (width: number, height: number) => {
+      if (width <= 0 || height <= 0) {
+        return;
+      }
+      const aspect = width / height;
+      if (!Number.isFinite(aspect)) {
+        return;
+      }
+      charAspectRef.current = aspect;
+      updateRowEstimate(columnsRef.current);
+    },
+    [updateRowEstimate]
+  );
 
   return {
     asciiFrame,
