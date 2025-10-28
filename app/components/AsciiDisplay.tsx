@@ -127,7 +127,8 @@ export function AsciiDisplay({
   return (
     <div
       ref={containerRef}
-      className="relative h-[360px] overflow-hidden rounded-lg border border-lime-500/30 bg-black/70 sm:h-[420px] lg:h-[480px]"
+      className="relative w-full overflow-hidden rounded-lg border border-lime-500/30 bg-black/70"
+      style={{ minHeight: "clamp(320px, 65vw, 720px)" }}
     >
       <pre
         className="relative h-full w-full overflow-hidden whitespace-pre font-mono text-lime-200"

@@ -20,7 +20,7 @@ export function AsciiCamera() {
 
   return (
     <>
-      <section className="flex flex-col gap-4 rounded-xl border border-lime-500/40 bg-lime-950/10 p-6 shadow-lg">
+      <section className="flex w-full flex-col gap-4 rounded-xl border border-lime-500/40 bg-lime-950/10 p-6 shadow-lg">
         <AsciiControls columns={columns} onColumnsChange={setColumns} />
         <AsciiDisplay
           asciiFrame={asciiFrame}
