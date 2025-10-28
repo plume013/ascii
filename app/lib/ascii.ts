@@ -1,7 +1,9 @@
 export const ASCII_CHARS =
   " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@";
-export const CHAR_PIXEL_ASPECT = 0.55;
-export const DEFAULT_COLUMNS = 96;
+export const DEFAULT_CHAR_ASPECT = 0.55;
+export const MIN_COLUMNS = 40;
+export const MAX_COLUMNS = 240;
+export const DEFAULT_COLUMNS = 128;
 
 const LUMINANCE_RED_COEFF = 0.2126;
 const LUMINANCE_GREEN_COEFF = 0.7152;

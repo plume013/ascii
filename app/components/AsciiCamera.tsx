@@ -12,6 +12,7 @@ export function AsciiCamera() {
     status,
     errorMessage,
     setColumns,
+    updateCharCellSize,
     videoRef,
     canvasRef,
   } = useAsciiCamera();
@@ -24,6 +25,8 @@ export function AsciiCamera() {
           asciiFrame={asciiFrame}
           status={status}
           errorMessage={errorMessage}
+          columns={columns}
+          onCharCellSizeChange={updateCharCellSize}
         />
         <p className="text-xs text-lime-300/80 sm:text-sm">
           表示が粗い場合は列数スライダーを増やしてください。描画はCPU処理のため、列数を増やすとパフォーマンスが低下する可能性があります。
