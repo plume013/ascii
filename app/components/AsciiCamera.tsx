@@ -13,6 +13,7 @@ export function AsciiCamera() {
     errorMessage,
     setColumns,
     updateCharCellSize,
+    rows,
     videoRef,
     canvasRef,
   } = useAsciiCamera();
@@ -26,6 +27,7 @@ export function AsciiCamera() {
           status={status}
           errorMessage={errorMessage}
           columns={columns}
+          rows={rows}
           onCharCellSizeChange={updateCharCellSize}
         />
         <p className="text-xs text-lime-300/80 sm:text-sm">

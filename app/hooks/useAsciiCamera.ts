@@ -20,6 +20,7 @@ type UseAsciiCameraResult = {
   errorMessage: string;
   setColumns: (value: number) => void;
   updateCharCellSize: (width: number, height: number) => void;
+  rows: number;
   videoRef: RefObject<HTMLVideoElement>;
   canvasRef: RefObject<HTMLCanvasElement>;
 };
@@ -32,11 +33,17 @@ export function useAsciiCamera(): UseAsciiCameraResult {
   const columnsRef = useRef(DEFAULT_COLUMNS);
   const lastFrameRef = useRef(0);
   const charAspectRef = useRef(DEFAULT_CHAR_ASPECT);
+  const initialRows = Math.max(
+    20,
+    Math.round((DEFAULT_COLUMNS / (4 / 3)) * DEFAULT_CHAR_ASPECT)
+  );
+  const rowsRef = useRef(initialRows);
 
   const [asciiFrame, setAsciiFrame] = useState("");
   const [columns, setColumnsState] = useState(DEFAULT_COLUMNS);
   const [status, setStatus] = useState<CaptureStatus>("initial");
   const [errorMessage, setErrorMessage] = useState("");
+  const [rowCount, setRowCount] = useState(initialRows);
 
   useEffect(() => {
     columnsRef.current = columns;
@@ -93,6 +100,10 @@ export function useAsciiCamera(): UseAsciiCameraResult {
     );
 
     setAsciiFrame(ascii);
+    if (rowsRef.current !== targetHeight) {
+      rowsRef.current = targetHeight;
+      setRowCount(targetHeight);
+    }
   }, []);
 
   useEffect(() => {
@@ -202,6 +213,7 @@ export function useAsciiCamera(): UseAsciiCameraResult {
     errorMessage,
     setColumns,
     updateCharCellSize,
+    rows: rowCount,
     videoRef,
     canvasRef,
   };
