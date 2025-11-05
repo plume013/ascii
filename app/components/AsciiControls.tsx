@@ -1,5 +1,7 @@
 'use client';
 
+import { MAX_COLUMNS, MIN_COLUMNS } from "../lib/ascii";
+
 type Props = {
   columns: number;
   onColumnsChange: (value: number) => void;
@@ -13,8 +15,8 @@ export function AsciiControls({ columns, onColumnsChange }: Props) {
       </label>
       <input
         type="range"
-        min={40}
-        max={160}
+        min={MIN_COLUMNS}
+        max={MAX_COLUMNS}
         step={8}
         value={columns}
         onChange={(event) => onColumnsChange(Number(event.target.value))}

@@ -4,10 +4,14 @@ import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
-  CHAR_PIXEL_ASPECT,
+  DEFAULT_CHAR_ASPECT,
   DEFAULT_COLUMNS,
+  MAX_COLUMNS,
+  MIN_COLUMNS,
   convertImageDataToAscii,
 } from "../lib/ascii";
+
+const DEFAULT_VIDEO_ASPECT = 4 / 3;
 
 export type CaptureStatus = "initial" | "pending" | "capturing" | "error";
 
@@ -17,6 +21,8 @@ type UseAsciiCameraResult = {
   status: CaptureStatus;
   errorMessage: string;
   setColumns: (value: number) => void;
+  updateCharCellSize: (width: number, height: number) => void;
+  rows: number;
   videoRef: RefObject<HTMLVideoElement>;
   canvasRef: RefObject<HTMLCanvasElement>;
 };
@@ -28,11 +34,19 @@ export function useAsciiCamera(): UseAsciiCameraResult {
   const animationRef = useRef<number>();
   const columnsRef = useRef(DEFAULT_COLUMNS);
   const lastFrameRef = useRef(0);
+  const charAspectRef = useRef(DEFAULT_CHAR_ASPECT);
+  const videoAspectRef = useRef(DEFAULT_VIDEO_ASPECT);
+  const initialRows = Math.max(
+    20,
+    Math.round((DEFAULT_COLUMNS / (4 / 3)) * DEFAULT_CHAR_ASPECT)
+  );
+  const rowsRef = useRef(initialRows);
 
   const [asciiFrame, setAsciiFrame] = useState("");
   const [columns, setColumnsState] = useState(DEFAULT_COLUMNS);
   const [status, setStatus] = useState<CaptureStatus>("initial");
   const [errorMessage, setErrorMessage] = useState("");
+  const [rowCount, setRowCount] = useState(initialRows);
 
   useEffect(() => {
     columnsRef.current = columns;
@@ -43,6 +57,19 @@ export function useAsciiCamera(): UseAsciiCameraResult {
       ctxRef.current = canvasRef.current.getContext("2d", {
         willReadFrequently: true,
       });
+    }
+  }, []);
+
+  const updateRowEstimate = useCallback((cols: number) => {
+    const clampedCols = Math.max(MIN_COLUMNS, Math.min(cols, MAX_COLUMNS));
+    const aspect = videoAspectRef.current || DEFAULT_VIDEO_ASPECT;
+    const estimatedHeight = Math.max(
+      20,
+      Math.round((clampedCols / aspect) * charAspectRef.current)
+    );
+    if (rowsRef.current !== estimatedHeight) {
+      rowsRef.current = estimatedHeight;
+      setRowCount(estimatedHeight);
     }
   }, []);
 
@@ -61,14 +88,15 @@ export function useAsciiCamera(): UseAsciiCameraResult {
     }
     lastFrameRef.current = now;
 
-    const targetWidth = Math.max(40, Math.min(columnsRef.current, 160));
+    const targetWidth = Math.max(MIN_COLUMNS, Math.min(columnsRef.current, MAX_COLUMNS));
     const aspectRatio =
       video.videoWidth > 0 && video.videoHeight > 0
         ? video.videoWidth / video.videoHeight
         : 4 / 3;
+    videoAspectRef.current = aspectRatio;
     const targetHeight = Math.max(
       20,
-      Math.round((targetWidth / aspectRatio) * CHAR_PIXEL_ASPECT)
+      Math.round((targetWidth / aspectRatio) * charAspectRef.current)
     );
 
     if (canvas.width !== targetWidth) {
@@ -89,6 +117,10 @@ export function useAsciiCamera(): UseAsciiCameraResult {
     );
 
     setAsciiFrame(ascii);
+    if (rowsRef.current !== targetHeight) {
+      rowsRef.current = targetHeight;
+      setRowCount(targetHeight);
+    }
   }, []);
 
   useEffect(() => {
@@ -176,8 +208,26 @@ export function useAsciiCamera(): UseAsciiCameraResult {
   }, [renderAsciiFrame]);
 
   const setColumns = (value: number) => {
-    setColumnsState(value);
+    const clamped = Math.max(MIN_COLUMNS, Math.min(value, MAX_COLUMNS));
+    setColumnsState(clamped);
+    columnsRef.current = clamped;
+    updateRowEstimate(clamped);
   };
+
+  const updateCharCellSize = useCallback(
+    (width: number, height: number) => {
+      if (width <= 0 || height <= 0) {
+        return;
+      }
+      const aspect = width / height;
+      if (!Number.isFinite(aspect)) {
+        return;
+      }
+      charAspectRef.current = aspect;
+      updateRowEstimate(columnsRef.current);
+    },
+    [updateRowEstimate]
+  );
 
   return {
     asciiFrame,
@@ -185,6 +235,8 @@ export function useAsciiCamera(): UseAsciiCameraResult {
     status,
     errorMessage,
     setColumns,
+    updateCharCellSize,
+    rows: rowCount,
     videoRef,
     canvasRef,
   };

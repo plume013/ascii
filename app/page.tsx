@@ -13,7 +13,7 @@ export default function Home() {
         </p>
       </header>
 
-      <main className="mt-10 flex w-full max-w-5xl flex-1 flex-col items-stretch gap-8">
+      <main className="mt-10 flex w-full flex-1 flex-col items-stretch gap-8">
         <AsciiCamera />
       </main>
     </div>
